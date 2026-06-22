@@ -1,0 +1,1523 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure Device Wiping and Blockchain Certification System</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #687385;
+      --line: #d9e0e8;
+      --panel: #ffffff;
+      --bg: #eef3f7;
+      --soft: #f7fafc;
+      --nav: #14213d;
+      --nav-2: #1f365d;
+      --accent: #0b7a75;
+      --accent-2: #b15f12;
+      --danger: #b42318;
+      --ok: #157347;
+      --warn: #9a6700;
+      --focus: #2563eb;
+      --shadow: 0 18px 42px rgba(15, 23, 42, .12);
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+    button, input, select, textarea {
+      font: inherit;
+    }
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+    .hidden { display: none !important; }
+
+    .login-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(320px, 440px) 1fr;
+      background: #e8eef5;
+    }
+    .login-side {
+      background: var(--nav);
+      color: white;
+      padding: 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #39b3ad, #f1a33c);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #0c1828;
+    }
+    .brand-name {
+      margin-top: 18px;
+      font-size: 25px;
+      line-height: 1.18;
+      font-weight: 780;
+      letter-spacing: 0;
+      max-width: 330px;
+    }
+    .login-side p {
+      color: #d7e2ef;
+      line-height: 1.6;
+      max-width: 350px;
+    }
+    .demo-users {
+      border-top: 1px solid rgba(255,255,255,.18);
+      padding-top: 20px;
+      color: #dbe6f3;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .login-main {
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+    .login-card {
+      width: min(430px, 100%);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+    .login-card h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+    .form-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 22px;
+    }
+    label {
+      display: grid;
+      gap: 7px;
+      color: #2c3746;
+      font-weight: 650;
+      font-size: 13px;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      padding: 10px 11px;
+      background: white;
+      color: var(--ink);
+      outline: none;
+    }
+    textarea { resize: vertical; min-height: 86px; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, .14);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 9px 13px;
+      border-radius: 7px;
+      color: white;
+      background: var(--accent);
+      font-weight: 720;
+      white-space: nowrap;
+    }
+    .btn:hover { filter: brightness(.96); }
+    .btn.secondary {
+      color: var(--ink);
+      background: #e8eef5;
+      border: 1px solid #cad4df;
+    }
+    .btn.warn { background: var(--accent-2); }
+    .btn.danger { background: var(--danger); }
+    .btn.small {
+      min-height: 31px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .btn.icon {
+      width: 36px;
+      padding: 0;
+      font-weight: 900;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+    }
+    .sidebar {
+      background: var(--nav);
+      color: white;
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .side-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+    }
+    .side-brand strong {
+      line-height: 1.15;
+      font-size: 15px;
+    }
+    .nav-list {
+      display: grid;
+      gap: 5px;
+    }
+    .nav-button {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: #dce7f5;
+      padding: 11px 12px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+    }
+    .nav-button:hover, .nav-button.active {
+      background: var(--nav-2);
+      color: #ffffff;
+    }
+    .nav-icon {
+      width: 23px;
+      height: 23px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: rgba(255,255,255,.10);
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .user-panel {
+      margin-top: auto;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.08);
+      color: #dce7f5;
+    }
+    .user-panel strong {
+      color: white;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .workspace {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    .topbar {
+      height: 66px;
+      background: white;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+    .topbar h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(21, 115, 71, .12);
+    }
+    .content {
+      padding: 22px;
+      overflow: auto;
+    }
+    .view {
+      display: none;
+      gap: 18px;
+    }
+    .view.active {
+      display: grid;
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .panel, .window {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+      min-width: 0;
+    }
+    .panel {
+      padding: 16px;
+    }
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .panel-title h2, .window-title h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .window-title {
+      min-height: 44px;
+      padding: 0 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      background: #f7fafc;
+      border-radius: 8px 8px 0 0;
+    }
+    .window-body { padding: 16px; }
+    .metric {
+      padding: 16px;
+      border-radius: 8px;
+      background: white;
+      border: 1px solid var(--line);
+    }
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 720;
+      text-transform: uppercase;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 28px;
+    }
+    .metric small {
+      color: var(--muted);
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: white;
+    }
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #e5ebf1;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+    th {
+      background: #f4f7fa;
+      color: #455366;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 25px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 760;
+      border: 1px solid transparent;
+    }
+    .status.ready { color: #0f5132; background: #dff5e8; border-color: #b7e4c7; }
+    .status.wiped { color: #164e63; background: #d9f2f8; border-color: #a9ddec; }
+    .status.pending { color: #7c4a03; background: #fff1cf; border-color: #f5d27b; }
+    .status.failed, .status.invalid { color: #842029; background: #f8d7da; border-color: #f1aeb5; }
+    .status.valid { color: #0f5132; background: #d1e7dd; border-color: #a3cfbb; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 13px;
+    }
+    .toolbar .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .toolbar input, .toolbar select {
+      max-width: 250px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 13px;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .kv {
+      border: 1px solid #e2e8f0;
+      background: #fbfdff;
+      border-radius: 7px;
+      padding: 10px;
+      min-width: 0;
+    }
+    .kv span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .kv strong {
+      word-break: break-word;
+      font-size: 13px;
+    }
+    .log-list {
+      display: grid;
+      gap: 8px;
+      max-height: 360px;
+      overflow: auto;
+    }
+    .log-item {
+      border: 1px solid #e3e8ef;
+      border-radius: 7px;
+      padding: 10px;
+      background: #fbfdff;
+      font-size: 13px;
+    }
+    .log-item small {
+      color: var(--muted);
+      display: block;
+      margin-top: 4px;
+    }
+    .chain-list {
+      display: grid;
+      gap: 10px;
+    }
+    .block-card {
+      border: 1px solid #d9e2ec;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+    .hash {
+      font-family: Consolas, Menlo, monospace;
+      word-break: break-all;
+      font-size: 12px;
+      color: #334155;
+    }
+    .progress-shell {
+      height: 13px;
+      background: #e6edf4;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #d7e0ea;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #f0a23b);
+      transition: width .18s ease;
+    }
+    .modal-layer {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .48);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      z-index: 30;
+    }
+    .modal {
+      width: min(760px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #cad4df;
+      box-shadow: var(--shadow);
+    }
+    .modal-head {
+      min-height: 48px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f7fafc;
+      border-radius: 8px 8px 0 0;
+    }
+    .modal-head h2 {
+      font-size: 16px;
+      margin: 0;
+    }
+    .modal-body { padding: 16px; }
+    .certificate {
+      border: 2px solid #21324a;
+      background: white;
+      padding: 30px;
+      color: #111827;
+    }
+    .certificate h2 {
+      text-align: center;
+      font-size: 25px;
+      margin: 0 0 7px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    .certificate .sub {
+      text-align: center;
+      color: #566276;
+      margin-bottom: 24px;
+    }
+    .cert-grid {
+      display: grid;
+      grid-template-columns: 1fr 150px;
+      gap: 18px;
+      align-items: start;
+    }
+    .qr {
+      width: 150px;
+      height: 150px;
+      display: grid;
+      grid-template-columns: repeat(15, 1fr);
+      grid-template-rows: repeat(15, 1fr);
+      border: 7px solid #fff;
+      outline: 1px solid #222;
+      background: white;
+    }
+    .qr span.on { background: #111; }
+    .cert-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid #cdd6e0;
+      color: #526173;
+      font-size: 12px;
+    }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #102a43;
+      color: white;
+      border-radius: 7px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      z-index: 40;
+      max-width: 360px;
+    }
+    .empty {
+      color: var(--muted);
+      padding: 18px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      background: #fbfdff;
+      text-align: center;
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+      .modal-head, .no-print { display: none !important; }
+      .certificate { border: 2px solid #111; }
+    }
+
+    @media (max-width: 920px) {
+      .login-shell, .app-shell { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+      }
+      .nav-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .grid.cols-2, .grid.cols-3, .grid.cols-4, .form-row {
+        grid-template-columns: 1fr;
+      }
+      .cert-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <section id="loginScreen" class="login-shell">
+    <aside class="login-side">
+      <div>
+        <div class="brand-mark">SW</div>
+        <div class="brand-name">Secure Device Wiping and Blockchain Certification System</div>
+        <p>Local certification console for controlled device erasure, immutable proof records, and audit verification.</p>
+      </div>
+      <div class="demo-users">
+        <strong>Demo accounts</strong><br>
+        Admin: admin / admin123<br>
+        Technician: tech / tech123<br>
+        Auditor: auditor / audit123
+      </div>
+    </aside>
+    <main class="login-main">
+      <div class="login-card">
+        <h1>Sign in</h1>
+        <div style="color:var(--muted);font-size:14px;">Local network workspace</div>
+        <form id="loginForm" class="form-grid">
+          <label>Username
+            <input id="loginUsername" autocomplete="username" required value="admin">
+          </label>
+          <label>Password
+            <input id="loginPassword" type="password" autocomplete="current-password" required value="admin123">
+          </label>
+          <button class="btn" type="submit">Sign in</button>
+        </form>
+      </div>
+    </main>
+  </section>
+
+  <section id="appScreen" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="brand-mark">SW</div>
+        <strong>Secure Wipe<br>Certification</strong>
+      </div>
+      <nav class="nav-list" id="navList"></nav>
+      <div class="user-panel">
+        <strong id="userName"></strong>
+        <span id="userRole"></span>
+      </div>
+    </aside>
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <h1 id="viewTitle">Dashboard</h1>
+          <div style="font-size:12px;color:var(--muted);" id="orgLine"></div>
+        </div>
+        <div class="top-actions">
+          <span class="status-dot" title="Local blockchain online"></span>
+          <button class="btn secondary small" id="seedButton" type="button">Reset Demo</button>
+          <button class="btn secondary small" id="logoutButton" type="button">Logout</button>
+        </div>
+      </header>
+      <section class="content">
+        <div id="dashboardView" class="view active">
+          <div class="grid cols-4" id="metrics"></div>
+          <div class="grid cols-2">
+            <div class="window">
+              <div class="window-title"><h2>Recent Activity</h2></div>
+              <div class="window-body"><div class="log-list" id="recentActivity"></div></div>
+            </div>
+            <div class="window">
+              <div class="window-title"><h2>Blockchain Ledger</h2><button class="btn secondary small" id="validateChainBtn">Validate</button></div>
+              <div class="window-body"><div id="chainHealth"></div><div class="chain-list" id="chainPreview"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="devicesView" class="view">
+          <div class="grid cols-2">
+            <div class="panel">
+              <div class="panel-title"><h2>Register Device</h2></div>
+              <form id="deviceForm" class="form-grid">
+                <div class="form-row">
+                  <label>Device ID<input id="deviceId" required placeholder="DEV-006"></label>
+                  <label>Serial Number<input id="serialNumber" required placeholder="SN-990012"></label>
+                </div>
+                <div class="form-row">
+                  <label>Model<input id="model" required placeholder="Dell Latitude 5420"></label>
+                  <label>Storage Size<input id="storageSize" required placeholder="512 GB SSD"></label>
+                </div>
+                <div class="form-row">
+                  <label>Department<input id="department" required placeholder="Finance"></label>
+                  <label>Status
+                    <select id="deviceStatus">
+                      <option value="Ready">Ready</option>
+                      <option value="Pending Review">Pending Review</option>
+                    </select>
+                  </label>
+                </div>
+                <button class="btn" type="submit">Add Device</button>
+              </form>
+            </div>
+            <div class="panel">
+              <div class="panel-title"><h2>Device Detail</h2></div>
+              <div id="deviceDetail" class="empty">Select a device from the table.</div>
+            </div>
+          </div>
+          <div class="window">
+            <div class="window-title"><h2>Device Inventory</h2></div>
+            <div class="window-body">
+              <div class="toolbar">
+                <div class="filters">
+                  <input id="deviceSearch" placeholder="Search devices">
+                  <select id="deviceFilter">
+                    <option value="">All statuses</option>
+                    <option>Ready</option>
+                    <option>Pending Review</option>
+                    <option>Wiped</option>
+                    <option>Failed</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-wrap"><table id="devicesTable"></table></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="wipeView" class="view">
+          <div class="window">
+            <div class="window-title"><h2>Wipe Execution</h2></div>
+            <div class="window-body">
+              <form id="wipeForm" class="grid cols-3">
+                <label>Device
+                  <select id="wipeDevice" required></select>
+                </label>
+                <label>Wipe Method
+                  <select id="wipeMethod" required>
+                    <option>DoD 5220.22-M 3-pass overwrite</option>
+                    <option>NIST 800-88 Clear</option>
+                    <option>NIST 800-88 Purge simulation</option>
+                    <option>Random overwrite and verification</option>
+                  </select>
+                </label>
+                <label>Verification Mode
+                  <select id="verifyMode">
+                    <option>Full checksum verification</option>
+                    <option>Sample sector verification</option>
+                  </select>
+                </label>
+                <button class="btn warn" type="submit">Start Safe Wipe</button>
+              </form>
+            </div>
+          </div>
+          <div class="window">
+            <div class="window-title"><h2>Wipe Logs</h2></div>
+            <div class="window-body"><div class="table-wrap"><table id="wipeLogsTable"></table></div></div>
+          </div>
+        </div>
+
+        <div id="certificatesView" class="view">
+          <div class="window">
+            <div class="window-title">
+              <h2>Certificates</h2>
+              <button class="btn secondary small" id="exportCertsBtn">Export CSV</button>
+            </div>
+            <div class="window-body">
+              <div class="toolbar">
+                <div class="filters">
+                  <input id="certSearch" placeholder="Search certificates">
+                </div>
+              </div>
+              <div class="table-wrap"><table id="certificatesTable"></table></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="verifyView" class="view">
+          <div class="grid cols-2">
+            <div class="panel">
+              <div class="panel-title"><h2>Certificate Verification</h2></div>
+              <form id="verifyForm" class="form-grid">
+                <label>Certificate ID, Device ID, Log Hash, or Transaction Hash
+                  <input id="verifyQuery" required placeholder="CERT-...">
+                </label>
+                <button class="btn" type="submit">Verify</button>
+              </form>
+            </div>
+            <div class="panel">
+              <div class="panel-title"><h2>Result</h2></div>
+              <div id="verifyResult" class="empty">Enter a certificate reference.</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="adminView" class="view">
+          <div class="grid cols-2">
+            <div class="window">
+              <div class="window-title"><h2>User Management</h2></div>
+              <div class="window-body">
+                <form id="userForm" class="form-grid">
+                  <div class="form-row">
+                    <label>Name<input id="newUserName" required></label>
+                    <label>Username<input id="newUsername" required></label>
+                  </div>
+                  <div class="form-row">
+                    <label>Password<input id="newPassword" required></label>
+                    <label>Role
+                      <select id="newRole">
+                        <option>Admin</option>
+                        <option>Technician</option>
+                        <option>Auditor</option>
+                      </select>
+                    </label>
+                  </div>
+                  <button class="btn" type="submit">Add User</button>
+                </form>
+                <div class="table-wrap" style="margin-top:14px;"><table id="usersTable"></table></div>
+              </div>
+            </div>
+            <div class="window">
+              <div class="window-title"><h2>Local Chain Blocks</h2></div>
+              <div class="window-body"><div class="chain-list" id="fullChain"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="auditView" class="view">
+          <div class="window">
+            <div class="window-title">
+              <h2>Audit Trail</h2>
+              <button class="btn secondary small" id="exportAuditBtn">Export CSV</button>
+            </div>
+            <div class="window-body"><div class="table-wrap"><table id="auditTable"></table></div></div>
+          </div>
+        </div>
+
+        <div id="settingsView" class="view">
+          <div class="panel">
+            <div class="panel-title"><h2>Settings</h2></div>
+            <form id="settingsForm" class="form-grid">
+              <div class="form-row">
+                <label>Organization Name<input id="settingOrg" required></label>
+                <label>Blockchain RPC URL<input id="settingRpc" required></label>
+              </div>
+              <div class="form-row">
+                <label>Certificate Prefix<input id="settingPrefix" required></label>
+                <label>Local Verification URL<input id="settingVerifyUrl" required></label>
+              </div>
+              <label>Certificate Footer<textarea id="settingFooter"></textarea></label>
+              <button class="btn" type="submit">Save Settings</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+  </section>
+
+  <div id="modalLayer" class="modal-layer hidden"></div>
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    const STORE_KEY = "secureWipeBlockchainApp.v1";
+    const views = [
+      { id: "dashboard", title: "Dashboard", icon: "D", roles: ["Admin", "Technician", "Auditor"] },
+      { id: "devices", title: "Devices", icon: "V", roles: ["Admin", "Technician"] },
+      { id: "wipe", title: "Wipe", icon: "W", roles: ["Admin", "Technician"] },
+      { id: "certificates", title: "Certificates", icon: "C", roles: ["Admin", "Technician", "Auditor"] },
+      { id: "verify", title: "Verify", icon: "K", roles: ["Admin", "Technician", "Auditor"] },
+      { id: "admin", title: "Admin", icon: "A", roles: ["Admin"] },
+      { id: "audit", title: "Audit", icon: "R", roles: ["Admin", "Auditor"] },
+      { id: "settings", title: "Settings", icon: "S", roles: ["Admin"] }
+    ];
+
+    let state = loadState();
+    let currentUser = null;
+    let currentView = "dashboard";
+    let selectedDeviceId = null;
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function uid(prefix) {
+      const stamp = Date.now().toString(36).toUpperCase();
+      const rand = Math.random().toString(36).slice(2, 7).toUpperCase();
+      return `${prefix}-${stamp}-${rand}`;
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORE_KEY);
+      if (saved) return JSON.parse(saved);
+      return seedState();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    }
+
+    function seedState() {
+      const genesis = {
+        index: 0,
+        timestamp: "2026-06-22T00:00:00.000Z",
+        previousHash: "0",
+        nonce: 0,
+        transactions: [{ type: "GENESIS", note: "Local offline proof ledger initialized" }],
+        hash: ""
+      };
+      const seeded = {
+        settings: {
+          organization: "SIH Secure Asset Lab",
+          rpcUrl: "local://offline-proof-chain",
+          certificatePrefix: "CERT",
+          verifyUrl: "local://secure-wipe/verify",
+          footer: "Only the cryptographic proof is stored on-chain. No sensitive device data is written to the ledger."
+        },
+        users: [
+          { id: "USR-001", name: "System Administrator", username: "admin", password: "admin123", role: "Admin" },
+          { id: "USR-002", name: "Wipe Technician", username: "tech", password: "tech123", role: "Technician" },
+          { id: "USR-003", name: "Compliance Auditor", username: "auditor", password: "audit123", role: "Auditor" }
+        ],
+        devices: [
+          { id: "DEV-001", serial: "SN-442901", model: "Dell Latitude 5420", storage: "512 GB SSD", department: "Finance", status: "Ready", addedAt: nowIso() },
+          { id: "DEV-002", serial: "SN-884210", model: "HP ProBook 440", storage: "1 TB HDD", department: "HR", status: "Ready", addedAt: nowIso() },
+          { id: "DEV-003", serial: "SN-771245", model: "Lenovo ThinkPad T14", storage: "256 GB SSD", department: "IT Services", status: "Pending Review", addedAt: nowIso() }
+        ],
+        wipeLogs: [],
+        certificates: [],
+        audit: [],
+        chain: [genesis]
+      };
+      genesis.hash = simpleBlockHash(genesis);
+      localStorage.setItem(STORE_KEY, JSON.stringify(seeded));
+      return seeded;
+    }
+
+    function resetDemo() {
+      localStorage.removeItem(STORE_KEY);
+      state = seedState();
+      selectedDeviceId = null;
+      audit("Demo data reset", "System state restored to sample records.");
+      renderAll();
+    }
+
+    function simpleBlockHash(block) {
+      const text = `${block.index}|${block.timestamp}|${block.previousHash}|${block.nonce}|${JSON.stringify(block.transactions)}`;
+      let hash = 0x811c9dc5;
+      for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193);
+      }
+      return ("00000000" + (hash >>> 0).toString(16)).slice(-8);
+    }
+
+    async function sha256(text) {
+      const data = new TextEncoder().encode(text);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      return [...new Uint8Array(hashBuffer)].map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function blockPayload(block) {
+      return `${block.index}|${block.timestamp}|${block.previousHash}|${block.nonce}|${JSON.stringify(block.transactions)}`;
+    }
+
+    async function blockHash(block) {
+      return sha256(blockPayload(block));
+    }
+
+    async function mineBlock(transaction) {
+      const previous = state.chain[state.chain.length - 1];
+      const block = {
+        index: previous.index + 1,
+        timestamp: nowIso(),
+        previousHash: previous.hash,
+        nonce: 0,
+        transactions: [transaction],
+        hash: ""
+      };
+      while (true) {
+        block.hash = await blockHash(block);
+        if (block.hash.startsWith("00")) break;
+        block.nonce++;
+      }
+      state.chain.push(block);
+      return block;
+    }
+
+    async function validateChain() {
+      for (let i = 1; i < state.chain.length; i++) {
+        const block = state.chain[i];
+        const previous = state.chain[i - 1];
+        if (block.previousHash !== previous.hash) return { ok: false, message: `Block ${i} has a broken previous hash.` };
+        const expectedHash = await blockHash(block);
+        if (block.hash !== expectedHash) return { ok: false, message: `Block ${i} content has been modified.` };
+        if (!block.hash.startsWith("00")) return { ok: false, message: `Block ${i} proof is invalid.` };
+      }
+      return { ok: true, message: `${state.chain.length} linked blocks validated.` };
+    }
+
+    function audit(action, detail) {
+      state.audit.unshift({
+        id: uid("AUD"),
+        time: nowIso(),
+        user: currentUser ? currentUser.name : "System",
+        role: currentUser ? currentUser.role : "System",
+        action,
+        detail
+      });
+      saveState();
+    }
+
+    function can(view) {
+      return view.roles.includes(currentUser.role);
+    }
+
+    function showToast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.remove("hidden");
+      setTimeout(() => el.classList.add("hidden"), 2600);
+    }
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      }[ch]));
+    }
+
+    function fmt(value) {
+      if (!value) return "";
+      return new Date(value).toLocaleString();
+    }
+
+    function renderNav() {
+      const nav = document.getElementById("navList");
+      nav.innerHTML = views.filter(can).map(v => `
+        <button class="nav-button ${currentView === v.id ? "active" : ""}" data-view="${v.id}" type="button">
+          <span class="nav-icon">${v.icon}</span><span>${v.title}</span>
+        </button>
+      `).join("");
+      nav.querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => setView(btn.dataset.view)));
+    }
+
+    function setView(id) {
+      currentView = id;
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      document.getElementById(`${id}View`).classList.add("active");
+      document.getElementById("viewTitle").textContent = views.find(v => v.id === id).title;
+      renderNav();
+      renderAll();
+    }
+
+    function renderAll() {
+      document.getElementById("orgLine").textContent = `${state.settings.organization} | ${state.settings.rpcUrl}`;
+      if (currentUser) {
+        document.getElementById("userName").textContent = currentUser.name;
+        document.getElementById("userRole").textContent = currentUser.role;
+        document.getElementById("seedButton").classList.toggle("hidden", currentUser.role !== "Admin");
+      }
+      renderDashboard();
+      renderDevices();
+      renderWipe();
+      renderCertificates();
+      renderAdmin();
+      renderAudit();
+      renderSettings();
+    }
+
+    function renderDashboard() {
+      const completed = state.wipeLogs.filter(l => l.status === "Success").length;
+      const failed = state.wipeLogs.filter(l => l.status === "Failed").length;
+      const metrics = [
+        ["Registered Devices", state.devices.length, "Inventory"],
+        ["Completed Wipes", completed, "Verified operations"],
+        ["Certificates", state.certificates.length, "Generated proofs"],
+        ["Ledger Blocks", state.chain.length, "Local chain"]
+      ];
+      document.getElementById("metrics").innerHTML = metrics.map(m => `
+        <div class="metric"><span>${m[0]}</span><strong>${m[1]}</strong><small>${m[2]}</small></div>
+      `).join("");
+      const activity = state.audit.slice(0, 8);
+      document.getElementById("recentActivity").innerHTML = activity.length ? activity.map(a => `
+        <div class="log-item"><strong>${esc(a.action)}</strong><small>${esc(a.user)} | ${fmt(a.time)}</small><div>${esc(a.detail)}</div></div>
+      `).join("") : `<div class="empty">No activity recorded.</div>`;
+      document.getElementById("chainHealth").innerHTML = `<p><span class="status pending">Checking</span> Validating local proof chain...</p>`;
+      validateChain().then(health => {
+        document.getElementById("chainHealth").innerHTML = `<p><span class="status ${health.ok ? "valid" : "invalid"}">${health.ok ? "Valid" : "Invalid"}</span> ${esc(health.message)}</p>`;
+      });
+      document.getElementById("chainPreview").innerHTML = state.chain.slice(-3).reverse().map(blockCard).join("");
+    }
+
+    function blockCard(block) {
+      const tx = block.transactions[0] || {};
+      return `
+        <div class="block-card">
+          <strong>Block #${block.index}</strong>
+          <div style="color:var(--muted);font-size:12px;margin:4px 0;">${fmt(block.timestamp)} | nonce ${block.nonce}</div>
+          <div class="hash">Hash: ${esc(block.hash)}</div>
+          <div class="hash">Prev: ${esc(block.previousHash)}</div>
+          <div style="margin-top:8px;font-size:13px;">${esc(tx.type || "WIPE_PROOF")} ${tx.deviceId ? "for " + esc(tx.deviceId) : ""}</div>
+        </div>
+      `;
+    }
+
+    function statusClass(status) {
+      if (status === "Ready") return "ready";
+      if (status === "Wiped") return "wiped";
+      if (status === "Success" || status === "Valid") return "valid";
+      if (status === "Failed" || status === "Invalid") return "failed";
+      return "pending";
+    }
+
+    function renderDevices() {
+      const search = (document.getElementById("deviceSearch")?.value || "").toLowerCase();
+      const filter = document.getElementById("deviceFilter")?.value || "";
+      const rows = state.devices.filter(d => {
+        const text = `${d.id} ${d.serial} ${d.model} ${d.department} ${d.status}`.toLowerCase();
+        return text.includes(search) && (!filter || d.status === filter);
+      });
+      document.getElementById("devicesTable").innerHTML = `
+        <thead><tr><th>Device ID</th><th>Serial</th><th>Model</th><th>Storage</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${rows.map(d => `
+          <tr>
+            <td><strong>${esc(d.id)}</strong></td><td>${esc(d.serial)}</td><td>${esc(d.model)}</td><td>${esc(d.storage)}</td><td>${esc(d.department)}</td>
+            <td><span class="status ${statusClass(d.status)}">${esc(d.status)}</span></td>
+            <td><button class="btn secondary small" data-detail="${esc(d.id)}">Open</button></td>
+          </tr>
+        `).join("") || `<tr><td colspan="7">No devices found.</td></tr>`}</tbody>
+      `;
+      document.querySelectorAll("[data-detail]").forEach(btn => btn.addEventListener("click", () => {
+        selectedDeviceId = btn.dataset.detail;
+        renderDeviceDetail();
+      }));
+      renderDeviceDetail();
+      const wipeDevice = document.getElementById("wipeDevice");
+      if (wipeDevice) {
+        wipeDevice.innerHTML = state.devices.map(d => `<option value="${esc(d.id)}">${esc(d.id)} - ${esc(d.model)} (${esc(d.status)})</option>`).join("");
+      }
+    }
+
+    function renderDeviceDetail() {
+      const d = state.devices.find(x => x.id === selectedDeviceId);
+      const target = document.getElementById("deviceDetail");
+      if (!d) {
+        target.className = "empty";
+        target.innerHTML = "Select a device from the table.";
+        return;
+      }
+      target.className = "detail-grid";
+      const cert = state.certificates.find(c => c.deviceId === d.id);
+      target.innerHTML = `
+        ${kv("Device ID", d.id)}${kv("Serial", d.serial)}${kv("Model", d.model)}${kv("Storage", d.storage)}
+        ${kv("Department", d.department)}${kv("Status", d.status)}
+        ${kv("Added", fmt(d.addedAt))}${kv("Certificate", cert ? cert.id : "Not generated")}
+      `;
+    }
+
+    function kv(k, v) {
+      return `<div class="kv"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`;
+    }
+
+    function renderWipe() {
+      document.getElementById("wipeLogsTable").innerHTML = `
+        <thead><tr><th>Log ID</th><th>Device</th><th>Method</th><th>Operator</th><th>Status</th><th>Log Hash</th><th>Time</th></tr></thead>
+        <tbody>${state.wipeLogs.map(l => `
+          <tr>
+            <td>${esc(l.id)}</td><td>${esc(l.deviceId)}</td><td>${esc(l.method)}</td><td>${esc(l.operatorName)}</td>
+            <td><span class="status ${statusClass(l.status)}">${esc(l.status)}</span></td>
+            <td class="hash">${esc(l.logHash).slice(0, 24)}...</td><td>${fmt(l.endTime)}</td>
+          </tr>
+        `).join("") || `<tr><td colspan="7">No wipe logs yet.</td></tr>`}</tbody>
+      `;
+    }
+
+    function renderCertificates() {
+      const search = (document.getElementById("certSearch")?.value || "").toLowerCase();
+      const certs = state.certificates.filter(c => `${c.id} ${c.deviceId} ${c.logHash} ${c.txHash}`.toLowerCase().includes(search));
+      document.getElementById("certificatesTable").innerHTML = `
+        <thead><tr><th>Certificate</th><th>Device</th><th>Method</th><th>Transaction</th><th>Status</th><th>Issued</th><th>Actions</th></tr></thead>
+        <tbody>${certs.map(c => `
+          <tr>
+            <td><strong>${esc(c.id)}</strong></td><td>${esc(c.deviceId)}</td><td>${esc(c.method)}</td>
+            <td class="hash">${esc(c.txHash).slice(0, 22)}...</td><td><span class="status valid">Valid</span></td><td>${fmt(c.issuedAt)}</td>
+            <td><button class="btn secondary small" data-cert="${esc(c.id)}">View</button></td>
+          </tr>
+        `).join("") || `<tr><td colspan="7">No certificates generated.</td></tr>`}</tbody>
+      `;
+      document.querySelectorAll("[data-cert]").forEach(btn => btn.addEventListener("click", () => showCertificate(btn.dataset.cert)));
+    }
+
+    function renderAdmin() {
+      document.getElementById("usersTable").innerHTML = `
+        <thead><tr><th>Name</th><th>Username</th><th>Role</th></tr></thead>
+        <tbody>${state.users.map(u => `<tr><td>${esc(u.name)}</td><td>${esc(u.username)}</td><td>${esc(u.role)}</td></tr>`).join("")}</tbody>
+      `;
+      document.getElementById("fullChain").innerHTML = state.chain.slice().reverse().map(blockCard).join("");
+    }
+
+    function renderAudit() {
+      document.getElementById("auditTable").innerHTML = `
+        <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th><th>Detail</th></tr></thead>
+        <tbody>${state.audit.map(a => `
+          <tr><td>${fmt(a.time)}</td><td>${esc(a.user)}</td><td>${esc(a.role)}</td><td>${esc(a.action)}</td><td>${esc(a.detail)}</td></tr>
+        `).join("") || `<tr><td colspan="5">No audit events.</td></tr>`}</tbody>
+      `;
+    }
+
+    function renderSettings() {
+      document.getElementById("settingOrg").value = state.settings.organization;
+      document.getElementById("settingRpc").value = state.settings.rpcUrl;
+      document.getElementById("settingPrefix").value = state.settings.certificatePrefix;
+      document.getElementById("settingVerifyUrl").value = state.settings.verifyUrl;
+      document.getElementById("settingFooter").value = state.settings.footer;
+    }
+
+    async function startWipe(deviceId, method, verifyMode) {
+      const device = state.devices.find(d => d.id === deviceId);
+      if (!device) return showToast("Device not found.");
+      if (device.status === "Wiped") return showToast("This device already has a completed wipe.");
+      const modal = document.getElementById("modalLayer");
+      modal.classList.remove("hidden");
+      modal.innerHTML = `
+        <div class="modal">
+          <div class="modal-head"><h2>Safe Wipe Progress</h2></div>
+          <div class="modal-body">
+            <div class="detail-grid">
+              ${kv("Device", `${device.id} - ${device.model}`)}
+              ${kv("Method", method)}
+              ${kv("Mode", verifyMode)}
+              ${kv("Operator", currentUser.name)}
+            </div>
+            <div style="margin-top:16px;" class="progress-shell"><div class="progress-fill" id="wipeProgress"></div></div>
+            <div id="wipeStep" style="margin-top:10px;color:var(--muted);">Preparing virtual sectors...</div>
+          </div>
+        </div>
+      `;
+      const steps = [
+        "Locking virtual device record",
+        "Creating controlled wipe workspace",
+        "Pass 1 overwrite simulation",
+        "Pass 2 overwrite simulation",
+        "Pass 3 overwrite simulation",
+        "Running checksum verification",
+        "Generating structured wipe log",
+        "Hashing log with SHA-256",
+        "Mining local blockchain proof block",
+        "Generating certificate"
+      ];
+      for (let i = 0; i < steps.length; i++) {
+        document.getElementById("wipeStep").textContent = steps[i];
+        document.getElementById("wipeProgress").style.width = `${Math.round(((i + 1) / steps.length) * 100)}%`;
+        await new Promise(resolve => setTimeout(resolve, 240));
+      }
+      const startTime = new Date(Date.now() - 39000).toISOString();
+      const endTime = nowIso();
+      const virtualPayload = `${device.id}|${device.serial}|${method}|${currentUser.id}|${startTime}|${endTime}|${Math.random()}`;
+      const verificationChecksum = await sha256(`verified:${virtualPayload}`);
+      const log = {
+        id: uid("LOG"),
+        deviceId: device.id,
+        serial: device.serial,
+        method,
+        verificationMode: verifyMode,
+        operatorId: currentUser.id,
+        operatorName: currentUser.name,
+        startTime,
+        endTime,
+        status: "Success",
+        verificationChecksum,
+        notes: "Safe prototype wipe completed against a virtual demo device only."
+      };
+      log.logHash = await sha256(JSON.stringify(log));
+      const transaction = {
+        type: "WIPE_PROOF",
+        deviceId: device.id,
+        operatorId: currentUser.id,
+        algorithm: method,
+        status: log.status,
+        logHash: log.logHash,
+        timestamp: endTime
+      };
+      const block = await mineBlock(transaction);
+      const cert = {
+        id: `${state.settings.certificatePrefix}-${Date.now().toString(36).toUpperCase()}`,
+        deviceId: device.id,
+        serial: device.serial,
+        model: device.model,
+        department: device.department,
+        method,
+        operatorName: currentUser.name,
+        issuedAt: nowIso(),
+        logId: log.id,
+        logHash: log.logHash,
+        txHash: block.hash,
+        blockIndex: block.index,
+        verificationCode: await sha256(`${device.id}|${log.logHash}|${block.hash}`)
+      };
+      state.wipeLogs.unshift(log);
+      state.certificates.unshift(cert);
+      device.status = "Wiped";
+      audit("Wipe certified", `${device.id} recorded in block #${block.index}; certificate ${cert.id}.`);
+      saveState();
+      modal.classList.add("hidden");
+      renderAll();
+      showCertificate(cert.id);
+    }
+
+    async function verifyCertificate(query) {
+      const q = query.trim().toLowerCase();
+      const cert = state.certificates.find(c =>
+        c.id.toLowerCase() === q ||
+        c.deviceId.toLowerCase() === q ||
+        c.logHash.toLowerCase() === q ||
+        c.txHash.toLowerCase() === q
+      );
+      if (!cert) return { status: "Not found", cert: null, detail: "No matching certificate or blockchain proof was found." };
+      const block = state.chain.find(b => b.hash === cert.txHash && b.index === cert.blockIndex);
+      const tx = block && block.transactions.find(t => t.logHash === cert.logHash && t.deviceId === cert.deviceId);
+      const chain = await validateChain();
+      if (!chain.ok) return { status: "Tampered", cert, detail: chain.message };
+      if (!block || !tx) return { status: "Tampered", cert, detail: "Certificate data does not match the local blockchain ledger." };
+      return { status: "Valid", cert, detail: `Matched block #${block.index} and transaction hash ${block.hash}.` };
+    }
+
+    function showVerifyResult(result) {
+      const el = document.getElementById("verifyResult");
+      const cls = result.status === "Valid" ? "valid" : result.status === "Not found" ? "pending" : "invalid";
+      if (!result.cert) {
+        el.className = "panel";
+        el.innerHTML = `<span class="status ${cls}">${esc(result.status)}</span><p>${esc(result.detail)}</p>`;
+        return;
+      }
+      el.className = "detail-grid";
+      el.innerHTML = `
+        ${kv("Status", result.status)}
+        ${kv("Certificate", result.cert.id)}
+        ${kv("Device", result.cert.deviceId)}
+        ${kv("Block", "#" + result.cert.blockIndex)}
+        ${kv("Transaction Hash", result.cert.txHash)}
+        ${kv("Result", result.detail)}
+      `;
+    }
+
+    function showCertificate(id) {
+      const cert = state.certificates.find(c => c.id === id);
+      if (!cert) return;
+      const modal = document.getElementById("modalLayer");
+      modal.classList.remove("hidden");
+      modal.innerHTML = `
+        <div class="modal">
+          <div class="modal-head no-print">
+            <h2>Certificate Viewer</h2>
+            <div>
+              <button class="btn secondary small" id="printCertBtn">Print / Save PDF</button>
+              <button class="btn secondary small" id="closeModalBtn">Close</button>
+            </div>
+          </div>
+          <div class="modal-body" id="printArea">
+            ${certificateHtml(cert)}
+          </div>
+        </div>
+      `;
+      document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+      document.getElementById("printCertBtn").addEventListener("click", () => window.print());
+    }
+
+    function certificateHtml(cert) {
+      return `
+        <div class="certificate">
+          <h2>Blockchain Certificate of Data Erasure</h2>
+          <div class="sub">${esc(state.settings.organization)}</div>
+          <div class="cert-grid">
+            <div class="detail-grid">
+              ${kv("Certificate ID", cert.id)}
+              ${kv("Issued At", fmt(cert.issuedAt))}
+              ${kv("Device ID", cert.deviceId)}
+              ${kv("Serial Number", cert.serial)}
+              ${kv("Model", cert.model)}
+              ${kv("Department", cert.department)}
+              ${kv("Wipe Method", cert.method)}
+              ${kv("Operator", cert.operatorName)}
+              ${kv("Block Index", "#" + cert.blockIndex)}
+              ${kv("Verification Code", cert.verificationCode.slice(0, 24) + "...")}
+            </div>
+            <div>
+              ${qrHtml(cert.verificationCode)}
+              <div style="text-align:center;font-size:11px;color:#526173;margin-top:8px;">Local verification matrix</div>
+            </div>
+          </div>
+          <div style="margin-top:18px;">
+            <div class="kv"><span>SHA-256 Log Hash</span><strong class="hash">${esc(cert.logHash)}</strong></div>
+            <div class="kv" style="margin-top:10px;"><span>Blockchain Transaction Hash</span><strong class="hash">${esc(cert.txHash)}</strong></div>
+          </div>
+          <div class="cert-footer">
+            <span>${esc(state.settings.footer)}</span>
+            <span>${esc(state.settings.verifyUrl)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function qrHtml(seed) {
+      let bits = "";
+      for (let i = 0; i < seed.length; i++) {
+        bits += parseInt(seed[i], 16).toString(2).padStart(4, "0");
+      }
+      let html = `<div class="qr" title="${esc(seed)}">`;
+      for (let y = 0; y < 15; y++) {
+        for (let x = 0; x < 15; x++) {
+          const finder = (x < 5 && y < 5) || (x > 9 && y < 5) || (x < 5 && y > 9);
+          const inner = finder && (x === 0 || y === 0 || x === 4 || y === 4 || (x > 1 && x < 3 && y > 1 && y < 3) || (x > 11 && x < 13 && y > 1 && y < 3) || (x > 1 && x < 3 && y > 11 && y < 13));
+          const on = inner || bits[(x + y * 15) % bits.length] === "1";
+          html += `<span class="${on ? "on" : ""}"></span>`;
+        }
+      }
+      return html + "</div>";
+    }
+
+    function closeModal() {
+      document.getElementById("modalLayer").classList.add("hidden");
+      document.getElementById("modalLayer").innerHTML = "";
+    }
+
+    function downloadCsv(filename, rows) {
+      const csv = rows.map(row => row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const user = state.users.find(u => u.username === username && u.password === password);
+      if (!user) return showToast("Invalid username or password.");
+      currentUser = user;
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("appScreen").classList.remove("hidden");
+      audit("Signed in", `${user.name} opened the console.`);
+      renderNav();
+      setView("dashboard");
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", () => {
+      audit("Signed out", `${currentUser.name} left the console.`);
+      currentUser = null;
+      document.getElementById("appScreen").classList.add("hidden");
+      document.getElementById("loginScreen").classList.remove("hidden");
+    });
+
+    document.getElementById("seedButton").addEventListener("click", resetDemo);
+    document.getElementById("validateChainBtn").addEventListener("click", async () => {
+      const result = await validateChain();
+      showToast(result.message);
+      renderDashboard();
+    });
+
+    document.getElementById("deviceForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const device = {
+        id: document.getElementById("deviceId").value.trim(),
+        serial: document.getElementById("serialNumber").value.trim(),
+        model: document.getElementById("model").value.trim(),
+        storage: document.getElementById("storageSize").value.trim(),
+        department: document.getElementById("department").value.trim(),
+        status: document.getElementById("deviceStatus").value,
+        addedAt: nowIso()
+      };
+      if (state.devices.some(d => d.id === device.id)) return showToast("Device ID already exists.");
+      state.devices.unshift(device);
+      selectedDeviceId = device.id;
+      audit("Device registered", `${device.id} added to inventory.`);
+      saveState();
+      e.target.reset();
+      renderAll();
+    });
+
+    document.getElementById("wipeForm").addEventListener("submit", e => {
+      e.preventDefault();
+      startWipe(
+        document.getElementById("wipeDevice").value,
+        document.getElementById("wipeMethod").value,
+        document.getElementById("verifyMode").value
+      );
+    });
+
+    document.getElementById("verifyForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const result = await verifyCertificate(document.getElementById("verifyQuery").value);
+      audit("Certificate verification", `${document.getElementById("verifyQuery").value} returned ${result.status}.`);
+      saveState();
+      showVerifyResult(result);
+      renderAudit();
+    });
+
+    document.getElementById("userForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const user = {
+        id: uid("USR"),
+        name: document.getElementById("newUserName").value.trim(),
+        username: document.getElementById("newUsername").value.trim(),
+        password: document.getElementById("newPassword").value,
+        role: document.getElementById("newRole").value
+      };
+      if (state.users.some(u => u.username === user.username)) return showToast("Username already exists.");
+      state.users.push(user);
+      audit("User added", `${user.username} added as ${user.role}.`);
+      saveState();
+      e.target.reset();
+      renderAll();
+    });
+
+    document.getElementById("settingsForm").addEventListener("submit", e => {
+      e.preventDefault();
+      state.settings.organization = document.getElementById("settingOrg").value.trim();
+      state.settings.rpcUrl = document.getElementById("settingRpc").value.trim();
+      state.settings.certificatePrefix = document.getElementById("settingPrefix").value.trim();
+      state.settings.verifyUrl = document.getElementById("settingVerifyUrl").value.trim();
+      state.settings.footer = document.getElementById("settingFooter").value.trim();
+      audit("Settings updated", "Organization and certificate settings changed.");
+      saveState();
+      renderAll();
+      showToast("Settings saved.");
+    });
+
+    document.getElementById("exportAuditBtn").addEventListener("click", () => {
+      downloadCsv("audit-report.csv", [["Time", "User", "Role", "Action", "Detail"], ...state.audit.map(a => [a.time, a.user, a.role, a.action, a.detail])]);
+    });
+    document.getElementById("exportCertsBtn").addEventListener("click", () => {
+      downloadCsv("certificates.csv", [["Certificate", "Device", "Method", "Log Hash", "Transaction Hash", "Issued"], ...state.certificates.map(c => [c.id, c.deviceId, c.method, c.logHash, c.txHash, c.issuedAt])]);
+    });
+
+    ["deviceSearch", "deviceFilter", "certSearch"].forEach(id => {
+      document.getElementById(id).addEventListener("input", renderAll);
+      document.getElementById(id).addEventListener("change", renderAll);
+    });
+  </script>
+</body>
+</html>
