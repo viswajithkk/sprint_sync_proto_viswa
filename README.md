@@ -1,6 +1,9 @@
 # Secure Device Wiping and Blockchain Certification System
 
-This is a complete no-install local prototype based on the DPR and System Design Document.
+This is a local prototype based on the DPR and System Design Document. It can run in two proof modes:
+
+- Local demo ledger: no install required, useful for UI demos.
+- WipeRegistry contract: records wipe proofs on a real local Hardhat blockchain through ethers.js.
 
 ## Open the app
 
@@ -25,6 +28,35 @@ Demo accounts:
 - Audit trail
 - CSV exports
 - Settings for organization, local proof endpoint, and certificate text
+- Optional WipeRegistry contract mode using ethers.js
+
+## Run with a real local blockchain
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start a local Ethereum dev chain:
+
+```bash
+npm run chain
+```
+
+In a second terminal, deploy the registry:
+
+```bash
+npm run deploy:local
+```
+
+The deploy script writes `contract-config.js` with the deployed address and ABI. Open `index.html`, go to Settings, set Proof Mode to `WipeRegistry contract`, confirm the RPC URL is `http://127.0.0.1:8545`, and save.
+
+When contract mode is enabled, the wipe workflow calls:
+
+- `recordWipe(deviceId, logHash, algorithm, operatorId, status)`
+- `verifyWipe(logHash)`
+- `getCertificate(logHash)`
 
 ## Safety note
 
@@ -32,7 +64,11 @@ The app does not wipe real disks. It intentionally performs a safe wipe simulati
 
 ## Blockchain note
 
-The running app includes a browser-local proof chain so it works offline without installing dependencies. A Solidity smart contract model is included in `smart-contract/WipeRegistry.sol` for a future Hardhat/Ethereum PoA integration.
+The browser-local proof chain remains available for offline demos. For genuine blockchain-backed proof, use the Hardhat workflow above and keep the deployed `WipeRegistry` address in `contract-config.js` or Settings.
+
+## Maintenance
+
+This folder is a Git repository. Use small commits for each feature or fix, and update `CHANGELOG.md` when a user-visible workflow changes.
 
 ## Suggested production upgrade path
 
