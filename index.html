@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Secure Device Wiping and Blockchain Certification System</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script src="contract-config.js"></script>
   <style>
     :root {
       --ink: #17202a;
@@ -823,6 +825,15 @@
                 <label>Blockchain RPC URL<input id="settingRpc" required></label>
               </div>
               <div class="form-row">
+                <label>Proof Mode
+                  <select id="settingProofMode">
+                    <option value="local">Local demo ledger</option>
+                    <option value="contract">WipeRegistry contract</option>
+                  </select>
+                </label>
+                <label>Contract Address<input id="settingContractAddress" placeholder="0x..."></label>
+              </div>
+              <div class="form-row">
                 <label>Certificate Prefix<input id="settingPrefix" required></label>
                 <label>Local Verification URL<input id="settingVerifyUrl" required></label>
               </div>
@@ -840,6 +851,13 @@
 
   <script>
     const STORE_KEY = "secureWipeBlockchainApp.v1";
+    const WIPE_REGISTRY_ABI = (window.WIPE_REGISTRY_CONFIG && window.WIPE_REGISTRY_CONFIG.abi && window.WIPE_REGISTRY_CONFIG.abi.length)
+      ? window.WIPE_REGISTRY_CONFIG.abi
+      : [
+        "function recordWipe(string deviceId,string logHash,string algorithm,string operatorId,string status)",
+        "function verifyWipe(string logHash) view returns (bool)",
+        "function getCertificate(string logHash) view returns (tuple(string deviceId,string logHash,string algorithm,string operatorId,string status,uint256 timestamp,bool exists))"
+      ];
     const views = [
       { id: "dashboard", title: "Dashboard", icon: "D", roles: ["Admin", "Technician", "Auditor"] },
       { id: "devices", title: "Devices", icon: "V", roles: ["Admin", "Technician"] },
@@ -868,8 +886,19 @@
 
     function loadState() {
       const saved = localStorage.getItem(STORE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) return normalizeState(JSON.parse(saved));
       return seedState();
+    }
+
+    function normalizeState(existing) {
+      const config = window.WIPE_REGISTRY_CONFIG || {};
+      existing.settings = {
+        proofMode: "local",
+        contractAddress: config.address || "",
+        contractChainId: config.chainId || 31337,
+        ...existing.settings
+      };
+      return existing;
     }
 
     function saveState() {
@@ -888,7 +917,10 @@
       const seeded = {
         settings: {
           organization: "SIH Secure Asset Lab",
-          rpcUrl: "local://offline-proof-chain",
+          rpcUrl: "http://127.0.0.1:8545",
+          proofMode: "local",
+          contractAddress: (window.WIPE_REGISTRY_CONFIG && window.WIPE_REGISTRY_CONFIG.address) || "",
+          contractChainId: (window.WIPE_REGISTRY_CONFIG && window.WIPE_REGISTRY_CONFIG.chainId) || 31337,
           certificatePrefix: "CERT",
           verifyUrl: "local://secure-wipe/verify",
           footer: "Only the cryptographic proof is stored on-chain. No sensitive device data is written to the ledger."
@@ -976,6 +1008,82 @@
       return { ok: true, message: `${state.chain.length} linked blocks validated.` };
     }
 
+    function isContractMode() {
+      return state.settings.proofMode === "contract";
+    }
+
+    function getContractAddress() {
+      return (state.settings.contractAddress || (window.WIPE_REGISTRY_CONFIG && window.WIPE_REGISTRY_CONFIG.address) || "").trim();
+    }
+
+    async function getRegistryContract(write = false) {
+      if (!window.ethers) {
+        throw new Error("ethers.js is not loaded. Install dependencies or allow the ethers browser bundle to load.");
+      }
+      const address = getContractAddress();
+      if (!address) {
+        throw new Error("WipeRegistry contract address is not configured.");
+      }
+      const ethers = window.ethers;
+      let provider;
+      let signer;
+      if (window.ethereum) {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        if (write) {
+          await provider.send("eth_requestAccounts", []);
+          signer = await provider.getSigner();
+        }
+      } else {
+        provider = new ethers.JsonRpcProvider(state.settings.rpcUrl);
+        if (write) signer = await provider.getSigner();
+      }
+      return new ethers.Contract(address, WIPE_REGISTRY_ABI, write ? signer : provider);
+    }
+
+    async function recordProof(transaction) {
+      if (!isContractMode()) {
+        const block = await mineBlock(transaction);
+        return {
+          txHash: block.hash,
+          blockIndex: block.index,
+          source: "local"
+        };
+      }
+      const contract = await getRegistryContract(true);
+      const tx = await contract.recordWipe(
+        transaction.deviceId,
+        transaction.logHash,
+        transaction.algorithm,
+        transaction.operatorId,
+        transaction.status
+      );
+      const receipt = await tx.wait();
+      return {
+        txHash: tx.hash,
+        blockIndex: receipt.blockNumber,
+        source: "contract"
+      };
+    }
+
+    async function verifyProof(cert) {
+      if (!isContractMode() || cert.proofSource !== "contract") {
+        const block = state.chain.find(b => b.hash === cert.txHash && b.index === cert.blockIndex);
+        const tx = block && block.transactions.find(t => t.logHash === cert.logHash && t.deviceId === cert.deviceId);
+        const chain = await validateChain();
+        if (!chain.ok) return { ok: false, detail: chain.message };
+        if (!block || !tx) return { ok: false, detail: "Certificate data does not match the local blockchain ledger." };
+        return { ok: true, detail: `Matched local block #${block.index} and transaction hash ${block.hash}.` };
+      }
+      const contract = await getRegistryContract(false);
+      const exists = await contract.verifyWipe(cert.logHash);
+      if (!exists) return { ok: false, detail: "Contract does not contain this wipe hash." };
+      const record = await contract.getCertificate(cert.logHash);
+      if (record.deviceId !== cert.deviceId || record.logHash !== cert.logHash) {
+        return { ok: false, detail: "Contract record does not match this certificate." };
+      }
+      return { ok: true, detail: `Matched WipeRegistry transaction ${cert.txHash}.` };
+    }
+
     function audit(action, detail) {
       state.audit.unshift({
         id: uid("AUD"),
@@ -1030,7 +1138,8 @@
     }
 
     function renderAll() {
-      document.getElementById("orgLine").textContent = `${state.settings.organization} | ${state.settings.rpcUrl}`;
+      const mode = isContractMode() ? `contract ${getContractAddress() || "not configured"}` : "local demo ledger";
+      document.getElementById("orgLine").textContent = `${state.settings.organization} | ${mode}`;
       if (currentUser) {
         document.getElementById("userName").textContent = currentUser.name;
         document.getElementById("userRole").textContent = currentUser.role;
@@ -1061,11 +1170,24 @@
       document.getElementById("recentActivity").innerHTML = activity.length ? activity.map(a => `
         <div class="log-item"><strong>${esc(a.action)}</strong><small>${esc(a.user)} | ${fmt(a.time)}</small><div>${esc(a.detail)}</div></div>
       `).join("") : `<div class="empty">No activity recorded.</div>`;
-      document.getElementById("chainHealth").innerHTML = `<p><span class="status pending">Checking</span> Validating local proof chain...</p>`;
-      validateChain().then(health => {
-        document.getElementById("chainHealth").innerHTML = `<p><span class="status ${health.ok ? "valid" : "invalid"}">${health.ok ? "Valid" : "Invalid"}</span> ${esc(health.message)}</p>`;
-      });
-      document.getElementById("chainPreview").innerHTML = state.chain.slice(-3).reverse().map(blockCard).join("");
+      if (isContractMode()) {
+        const configured = Boolean(getContractAddress());
+        document.getElementById("chainHealth").innerHTML = `<p><span class="status ${configured ? "valid" : "pending"}">${configured ? "Contract Mode" : "Needs Address"}</span> ${configured ? "Wipe proofs are submitted to WipeRegistry." : "Deploy WipeRegistry and set the contract address."}</p>`;
+        document.getElementById("chainPreview").innerHTML = state.certificates.filter(c => c.proofSource === "contract").slice(0, 3).map(c => `
+          <div class="block-card">
+            <strong>${esc(c.id)}</strong>
+            <div style="color:var(--muted);font-size:12px;margin:4px 0;">Contract block #${esc(c.blockIndex)}</div>
+            <div class="hash">Tx: ${esc(c.txHash)}</div>
+            <div style="margin-top:8px;font-size:13px;">${esc(c.deviceId)} | ${esc(c.method)}</div>
+          </div>
+        `).join("") || `<div class="empty">No contract transactions recorded yet.</div>`;
+      } else {
+        document.getElementById("chainHealth").innerHTML = `<p><span class="status pending">Checking</span> Validating local proof chain...</p>`;
+        validateChain().then(health => {
+          document.getElementById("chainHealth").innerHTML = `<p><span class="status ${health.ok ? "valid" : "invalid"}">${health.ok ? "Valid" : "Invalid"}</span> ${esc(health.message)}</p>`;
+        });
+        document.getElementById("chainPreview").innerHTML = state.chain.slice(-3).reverse().map(blockCard).join("");
+      }
     }
 
     function blockCard(block) {
@@ -1187,6 +1309,8 @@
     function renderSettings() {
       document.getElementById("settingOrg").value = state.settings.organization;
       document.getElementById("settingRpc").value = state.settings.rpcUrl;
+      document.getElementById("settingProofMode").value = state.settings.proofMode || "local";
+      document.getElementById("settingContractAddress").value = getContractAddress();
       document.getElementById("settingPrefix").value = state.settings.certificatePrefix;
       document.getElementById("settingVerifyUrl").value = state.settings.verifyUrl;
       document.getElementById("settingFooter").value = state.settings.footer;
@@ -1258,7 +1382,20 @@
         logHash: log.logHash,
         timestamp: endTime
       };
-      const block = await mineBlock(transaction);
+      let proof;
+      try {
+        proof = await recordProof(transaction);
+      } catch (error) {
+        log.status = "Failed";
+        state.wipeLogs.unshift(log);
+        device.status = "Failed";
+        audit("Blockchain recording failed", `${device.id} could not be certified: ${error.message}`);
+        saveState();
+        modal.classList.add("hidden");
+        renderAll();
+        showToast(error.message);
+        return;
+      }
       const cert = {
         id: `${state.settings.certificatePrefix}-${Date.now().toString(36).toUpperCase()}`,
         deviceId: device.id,
@@ -1270,14 +1407,16 @@
         issuedAt: nowIso(),
         logId: log.id,
         logHash: log.logHash,
-        txHash: block.hash,
-        blockIndex: block.index,
-        verificationCode: await sha256(`${device.id}|${log.logHash}|${block.hash}`)
+        txHash: proof.txHash,
+        blockIndex: proof.blockIndex,
+        proofSource: proof.source,
+        contractAddress: proof.source === "contract" ? getContractAddress() : "",
+        verificationCode: await sha256(`${device.id}|${log.logHash}|${proof.txHash}`)
       };
       state.wipeLogs.unshift(log);
       state.certificates.unshift(cert);
       device.status = "Wiped";
-      audit("Wipe certified", `${device.id} recorded in block #${block.index}; certificate ${cert.id}.`);
+      audit("Wipe certified", `${device.id} recorded through ${proof.source === "contract" ? "WipeRegistry" : "local ledger"} at block #${proof.blockIndex}; certificate ${cert.id}.`);
       saveState();
       modal.classList.add("hidden");
       renderAll();
@@ -1292,13 +1431,38 @@
         c.logHash.toLowerCase() === q ||
         c.txHash.toLowerCase() === q
       );
-      if (!cert) return { status: "Not found", cert: null, detail: "No matching certificate or blockchain proof was found." };
-      const block = state.chain.find(b => b.hash === cert.txHash && b.index === cert.blockIndex);
-      const tx = block && block.transactions.find(t => t.logHash === cert.logHash && t.deviceId === cert.deviceId);
-      const chain = await validateChain();
-      if (!chain.ok) return { status: "Tampered", cert, detail: chain.message };
-      if (!block || !tx) return { status: "Tampered", cert, detail: "Certificate data does not match the local blockchain ledger." };
-      return { status: "Valid", cert, detail: `Matched block #${block.index} and transaction hash ${block.hash}.` };
+      if (!cert) {
+        if (isContractMode() && q.length >= 32) {
+          try {
+            const contract = await getRegistryContract(false);
+            const exists = await contract.verifyWipe(query.trim());
+            if (exists) {
+              const record = await contract.getCertificate(query.trim());
+              return {
+                status: "Valid",
+                cert: {
+                  id: "CONTRACT-ONLY",
+                  deviceId: record.deviceId,
+                  logHash: record.logHash,
+                  txHash: "Recorded on WipeRegistry",
+                  blockIndex: "Contract",
+                  proofSource: "contract"
+                },
+                detail: "Log hash exists in the deployed WipeRegistry contract."
+              };
+            }
+          } catch (error) {
+            return { status: "Invalid", cert: null, detail: error.message };
+          }
+        }
+        return { status: "Not found", cert: null, detail: "No matching certificate or blockchain proof was found." };
+      }
+      try {
+        const proof = await verifyProof(cert);
+        return { status: proof.ok ? "Valid" : "Tampered", cert, detail: proof.detail };
+      } catch (error) {
+        return { status: "Invalid", cert, detail: error.message };
+      }
     }
 
     function showVerifyResult(result) {
@@ -1358,6 +1522,7 @@
               ${kv("Department", cert.department)}
               ${kv("Wipe Method", cert.method)}
               ${kv("Operator", cert.operatorName)}
+              ${kv("Proof Source", cert.proofSource === "contract" ? "WipeRegistry contract" : "Local demo ledger")}
               ${kv("Block Index", "#" + cert.blockIndex)}
               ${kv("Verification Code", cert.verificationCode.slice(0, 24) + "...")}
             </div>
@@ -1434,6 +1599,16 @@
 
     document.getElementById("seedButton").addEventListener("click", resetDemo);
     document.getElementById("validateChainBtn").addEventListener("click", async () => {
+      if (isContractMode()) {
+        try {
+          await getRegistryContract(false);
+          showToast("WipeRegistry contract configuration is ready.");
+        } catch (error) {
+          showToast(error.message);
+        }
+        renderDashboard();
+        return;
+      }
       const result = await validateChain();
       showToast(result.message);
       renderDashboard();
@@ -1498,6 +1673,8 @@
       e.preventDefault();
       state.settings.organization = document.getElementById("settingOrg").value.trim();
       state.settings.rpcUrl = document.getElementById("settingRpc").value.trim();
+      state.settings.proofMode = document.getElementById("settingProofMode").value;
+      state.settings.contractAddress = document.getElementById("settingContractAddress").value.trim();
       state.settings.certificatePrefix = document.getElementById("settingPrefix").value.trim();
       state.settings.verifyUrl = document.getElementById("settingVerifyUrl").value.trim();
       state.settings.footer = document.getElementById("settingFooter").value.trim();

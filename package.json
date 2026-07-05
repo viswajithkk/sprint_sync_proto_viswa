@@ -1,0 +1,20 @@
+{
+  "name": "secure-wipe-blockchain-app",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Secure device wiping workflow with blockchain-backed erasure certificates.",
+  "scripts": {
+    "chain": "hardhat node",
+    "compile": "hardhat compile",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.10"
+  },
+  "dependencies": {
+    "ethers": "^6.13.4"
+  }
+}
