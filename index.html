@@ -997,6 +997,10 @@
     }
 
     async function validateChain() {
+      const genesis = state.chain[0];
+      if (!genesis || genesis.hash !== simpleBlockHash(genesis)) {
+        return { ok: false, message: "Genesis block content has been modified." };
+      }
       for (let i = 1; i < state.chain.length; i++) {
         const block = state.chain[i];
         const previous = state.chain[i - 1];
