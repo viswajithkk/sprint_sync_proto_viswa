@@ -10,3 +10,8 @@
 
 - Created the first local prototype.
 - Added role-based login, device inventory, safe wipe simulation, SHA-256 hashing, local proof-chain ledger, certificates, verification, audit logs, exports, and settings.
+
+## 0.2.1 - 2026-10-12
+
+- Deployed and tested the app on an Ubuntu EC2 instance with a systemd-managed Hardhat chain.
+- Added Hardhat contract test, .gitignore, and deploy.sh helper.
